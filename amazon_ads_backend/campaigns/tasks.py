@@ -1,5 +1,6 @@
 from celery import shared_task
 from django.utils import timezone
+import logging
 
 from campaigns.models import Campaign
 from campaigns.services.amazon_client import (
@@ -14,6 +15,7 @@ from campaigns.services.amazon_client import (
     retry_kwargs={"max_retries": 3, "countdown": 5},
 )
 def update_campaign_status(self, campaign_id: int):
+    print(f"[Celery] Task started for campaign {campaign_id}")
     campaign = Campaign.objects.get(id=campaign_id)
     try:
         response = create_campaign(
@@ -25,6 +27,7 @@ def update_campaign_status(self, campaign_id: int):
         campaign.status = response["status"]
         campaign.save(update_fields=["external_id", "status", "updated_at"])
         logger.info(f"Campaign {campaign.id} updated: {response['status']}")
+        return {"campaign_id": campaign.id, "status": campaign.status}
     except AmazonAdsError as e:
         logger.warning(f"Retrying campaign {campaign.id} due to: {e}")
         raise
