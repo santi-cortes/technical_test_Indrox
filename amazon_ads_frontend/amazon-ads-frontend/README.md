@@ -1,73 +1,97 @@
-# React + TypeScript + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# Proyecto de Campañas - Frontend y Backend
 
-Currently, two official plugins are available:
+## Descripción
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Este proyecto tiene como objetivo crear una plataforma para gestionar campañas publicitarias simuladas con Amazon Ads. La plataforma cuenta con un backend en Django y un frontend en React, permitiendo crear, visualizar y actualizar campañas de manera sencilla.
 
-## React Compiler
+## Tecnologías usadas
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Backend
+- **Django**: Framework web en Python.
+- **Django REST Framework**: Para crear la API RESTful.
+- **Celery**: Para la ejecución de tareas asíncronas como la actualización periódica del estado de las campañas.
+- **Redis**: Como broker para Celery.
+- **Zod**: Para la validación de formularios en el frontend.
 
-## Expanding the ESLint configuration
+### Frontend
+- **React**: Biblioteca de JavaScript para crear interfaces de usuario.
+- **Vite**: Herramienta de construcción rápida para React.
+- **React Query**: Para el manejo eficiente de la caché de datos y refetching en el frontend.
+- **Tailwind CSS**: Framework de diseño para crear interfaces modernas y responsivas.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Instrucciones de ejecución
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Backend
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+1. Clonar el repositorio del backend:
+   ```bash
+   git clone <url del repositorio>
+   cd amazon_ads_backend
+   ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+2. Crear un entorno virtual y activarlo:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # En Linux/macOS
+   venv\Scriptsctivate     # En Windows
+   ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+3. Instalar las dependencias:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+4. Configurar el archivo `.env` con los valores necesarios.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+5. Realizar las migraciones de la base de datos:
+   ```bash
+   python manage.py migrate
+   ```
+
+6. Iniciar el servidor de desarrollo:
+   ```bash
+   python manage.py runserver
+   ```
+
+### Frontend
+
+1. Clonar el repositorio del frontend:
+   ```bash
+   git clone <url del repositorio>
+   cd amazon_ads_frontend
+   ```
+
+2. Instalar las dependencias:
+   ```bash
+   npm install
+   ```
+
+3. Iniciar el servidor de desarrollo:
+   ```bash
+   npm run dev
+   ```
+
+4. Visita `http://localhost:5173` para interactuar con la aplicación.
+
+## Características
+
+### Backend
+- **Crear campañas**: Endpoint POST `/api/campaigns/` para crear nuevas campañas.
+- **Listar campañas**: Endpoint GET `/api/campaigns/` para listar todas las campañas con su estado.
+- **Actualización periódica**: Cada minuto se actualiza el estado de las campañas a través de una tarea programada con Celery.
+
+### Frontend
+- **Formulario de creación de campaña**: Permite ingresar nombre, presupuesto y keywords.
+- **Listado de campañas**: Muestra todas las campañas creadas con sus detalles y estado.
+- **Actualización en tiempo real**: Las campañas se actualizan dinámicamente cada 5 segundos utilizando React Query.
+- **Búsqueda**: Se implementó un buscador que filtra las campañas por nombre.
+- **Paginación**: El listado de campañas cuenta con paginación para mejorar la visualización en caso de muchas campañas.
+
+## Cómo contribuir
+
+1. Fork el repositorio.
+2. Crea una rama para tu feature (`git checkout -b feature/nueva-caracteristica`).
+3. Haz tus cambios y haz commit (`git commit -am 'Añadir nueva característica'`).
+4. Push a la rama (`git push origin feature/nueva-caracteristica`).
+5. Crea un Pull Request.
