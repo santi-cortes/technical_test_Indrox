@@ -1,12 +1,9 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
 
-from .models import Campaign
-from .serializers import CampaignSerializer
-from .services.amazon_client import (
-    create_campaign,
-    AmazonAdsError,
-)
+from campaigns.models import Campaign
+from campaigns.serializers import CampaignSerializer
+from campaigns.tasks import update_campaign_status
 
 
 class CampaignListCreateView(generics.ListCreateAPIView):
@@ -19,20 +16,7 @@ class CampaignListCreateView(generics.ListCreateAPIView):
 
         campaign = serializer.save(status=Campaign.Status.PENDING)
 
-        try:
-            amazon_response = create_campaign(
-                name=campaign.name,
-                budget=campaign.budget,
-                keywords=campaign.keywords,
-            )
-
-            campaign.external_id = amazon_response["external_id"]
-            campaign.status = amazon_response["status"]
-            campaign.save(update_fields=["external_id", "status", "updated_at"])
-
-        except AmazonAdsError as e:
-            campaign.status = Campaign.Status.FAILED
-            campaign.save(update_fields=["status", "updated_at"])
+        update_campaign_status.delay(campaign.id)
 
         output_serializer = self.get_serializer(campaign)
         headers = self.get_success_headers(output_serializer.data)
