@@ -14,24 +14,20 @@ from campaigns.services.amazon_client import (
     retry_kwargs={"max_retries": 3, "countdown": 5},
 )
 def update_campaign_status(self, campaign_id: int):
-    """
-    Task async que simula la comunicación con Amazon Ads
-    y actualiza el estado de la campaña
-    """
-
     campaign = Campaign.objects.get(id=campaign_id)
-
-    response = create_campaign(
-        name=campaign.name,
-        budget=campaign.budget,
-        keywords=campaign.keywords,
-    )
-
-    campaign.external_id = response["external_id"]
-    campaign.status = response["status"]
-    campaign.save(update_fields=["external_id", "status", "updated_at"])
-
-
+    try:
+        response = create_campaign(
+            name=campaign.name,
+            budget=campaign.budget,
+            keywords=campaign.keywords,
+        )
+        campaign.external_id = response["external_id"]
+        campaign.status = response["status"]
+        campaign.save(update_fields=["external_id", "status", "updated_at"])
+        logger.info(f"Campaign {campaign.id} updated: {response['status']}")
+    except AmazonAdsError as e:
+        logger.warning(f"Retrying campaign {campaign.id} due to: {e}")
+        raise
 
 @shared_task(bind=True, autoretry_for=(AmazonAdsError,), retry_backoff=30, retry_kwargs={"max_retries": 3})
 def refresh_campaign_status(self):
@@ -55,4 +51,6 @@ def refresh_campaign_status(self):
             campaign.save(update_fields=["status", "updated_at"])
 
         except AmazonAdsError:
-            raise
+            campaign.updated_at = timezone.now()
+            campaign.save(update_fields=["updated_at"])
+            continue
