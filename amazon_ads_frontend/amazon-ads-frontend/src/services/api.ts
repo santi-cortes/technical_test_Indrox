@@ -2,7 +2,7 @@ import axios from "axios";
 import type { Campaign } from "../types/Campaign";
 
 const api = axios.create({
-  baseURL: "http://127.0.0.1:8000/api",
+  baseURL: "http://18.218.12.17:8000/api",
 });
 
 export const getCampaigns = async (): Promise<Campaign[]> => {
