@@ -16,7 +16,7 @@ function App() {
         </header>
 
         <CampaignForm />
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col justify-center lg:flex-row gap-6">
           <div className="lg:w-2/3">
             <CampaignList />
           </div>
