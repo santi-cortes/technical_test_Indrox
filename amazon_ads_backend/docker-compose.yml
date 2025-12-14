@@ -1,42 +1,57 @@
-version: '3'
+version: '3.8'
 
 services:
+  # 1. Servicio de Redis (Broker y Backend de Celery)
+  redis:
+    image: "redis:7-alpine"
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+
+  # 2. Servidor Web Django (DRF)
   web:
     build: .
-    command: /venv/bin/python manage.py runserver 0.0.0.0:8000
+    command: python manage.py runserver 0.0.0.0:8000  # O Gunicorn en producción
     volumes:
       - .:/app
     ports:
       - "8000:8000"
+    env_file:
+      - .env.docker  # Archivo para variables de entorno
     depends_on:
-      - redis
-    environment:
-      - DJANGO_SETTINGS_MODULE=config.settings
-      - REDIS_URL=redis://redis:6379/0
+      redis:
+        condition: service_healthy # Espera que Redis esté listo
+    # Si quieres usar Gunicorn en producción, cambia el command a:
+    # command: gunicorn tu_proyecto.wsgi:application --bind 0.0.0.0:8000
 
-  celery:
+  # 3. Celery Worker (Ejecuta tareas asíncronas)
+  celery_worker:
     build: .
-    command: celery -A config worker --loglevel=info
+    command: celery -A config worker -l info --pool=solo  # Cambia 'config' si tu módulo Celery es diferente
     volumes:
       - .:/app
+    env_file:
+      - .env.docker
     depends_on:
-      - redis
-    environment:
-      - DJANGO_SETTINGS_MODULE=config.settings
-      - REDIS_URL=redis://redis:6379/0
+      web:
+        condition: service_started
+      redis:
+        condition: service_healthy
 
+  # 4. Celery Beat (Programa tareas periódicas)
   celery_beat:
     build: .
-    command: celery -A config beat --loglevel=info
+    command: celery -A config beat -l info --scheduler django_celery_beat.schedulers.DatabaseScheduler
     volumes:
       - .:/app
+    env_file:
+      - .env.docker
     depends_on:
-      - redis
-    environment:
-      - DJANGO_SETTINGS_MODULE=config.settings
-      - REDIS_URL=redis://redis:6379/0
-
-  redis:
-    image: "redis:alpine"
-    ports:
-      - "6379:6379"
+      web:
+        condition: service_started
+      redis:
+        condition: service_healthy
