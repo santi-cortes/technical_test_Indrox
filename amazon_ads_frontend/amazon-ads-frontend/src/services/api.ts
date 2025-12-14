@@ -1,8 +1,10 @@
 import axios from "axios";
 import type { Campaign } from "../types/Campaign";
 
+const BACKEND_URL = import.meta.env.VITE_INDROX_URL_BACKEND || "http://localhost:8000";
+
 const api = axios.create({
-  baseURL: "http://18.218.12.17:8000/api",
+  baseURL: BACKEND_URL + "/api",
 });
 
 export const getCampaigns = async (): Promise<Campaign[]> => {
