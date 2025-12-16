@@ -16,7 +16,7 @@ class CampaignListCreateView(generics.ListCreateAPIView):
 
         campaign = serializer.save(status=Campaign.Status.PENDING)
 
-        # update_campaign_status.delay(campaign.id)
+        update_campaign_status.delay(campaign.id)
 
         output_serializer = self.get_serializer(campaign)
         headers = self.get_success_headers(output_serializer.data)
